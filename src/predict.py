@@ -46,11 +46,11 @@ class Predictor():
         self.X_train = pd.read_csv(
             self.config["SPLIT_DATA"]["X_train"], index_col=0)
         self.y_train = pd.read_csv(
-            self.config["SPLIT_DATA"]["y_train"], index_col=0)
+            self.config["SPLIT_DATA"]["y_train"], index_col=0).squeeze("columns")
         self.X_test = pd.read_csv(
             self.config["SPLIT_DATA"]["X_test"], index_col=0)
         self.y_test = pd.read_csv(
-            self.config["SPLIT_DATA"]["y_test"], index_col=0)
+            self.config["SPLIT_DATA"]["y_test"], index_col=0).squeeze("columns")
         self.sc = StandardScaler()
         self.X_train = self.sc.fit_transform(self.X_train)
         self.X_test = self.sc.transform(self.X_test)
@@ -82,7 +82,7 @@ class Predictor():
                         data = json.load(f)
                         X = self.sc.transform(
                             pd.json_normalize(data, record_path=['X']))
-                        y = pd.json_normalize(data, record_path=['y'])
+                        y = pd.json_normalize(data, record_path=['y'])["Type"]
                         score = classifier.score(X, y)
                         print(f'{args.model} has {score} score')
                     except Exception:
