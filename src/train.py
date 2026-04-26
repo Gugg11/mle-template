@@ -114,7 +114,7 @@ class MultiModel():
         if use_config:
             try:
                 classifier = SVC(kernel=self.config["SVM"]["kernel"], random_state=self.config.getint(
-                    "SVC", "random_state"))
+                    "SVM", "random_state"))
             except KeyError:
                 self.log.error(traceback.format_exc())
                 self.log.warning(f'Using config:{use_config}, no params')
