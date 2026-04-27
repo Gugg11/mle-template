@@ -93,11 +93,9 @@ options {
         }
 	}
 
-    post {
+     post {
         always {
-            node {
-                bat 'chcp 65001 && docker logout'  
-            }
+            echo 'Pipeline finished'
         }
     }
 }
