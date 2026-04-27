@@ -97,6 +97,7 @@ options {
         always {
             node {
                 bat 'chcp 65001 && docker logout'  
+            }
         }
     }
 }
