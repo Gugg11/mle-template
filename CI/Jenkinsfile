@@ -1,4 +1,4 @@
-pipeline {
+clonepipeline {
     agent any
 
     environment {
@@ -16,13 +16,15 @@ options {
         stage('Clone github repository') {
             steps {
                 cleanWs()
-                bat 'chcp 65001 && git clone -b main https://github.com/Gugg11/mle-template.git'
+               // bat 'chcp 65001 && git clone -b main https://github.com/Gugg11/mle-template.git'
+               checkout scm
 				}
 			}
 
         stage('Checkout repo dir') {
             steps {
-                bat 'chcp 65001 && cd mle-template && dir'
+               // bat 'chcp 65001 && cd mle-template && dir'
+                bat 'chcp 65001 && dir'
 				}
 			}
 
@@ -39,15 +41,20 @@ options {
             steps {
                 script {
                     try {
-                        bat 'chcp 65001 && cd mle-template && docker-compose build'
+                        //bat 'chcp 65001 && cd mle-template && docker-compose build'
+                        bat 'chcp 65001 && docker-compose build'
                         }
 
                     finally {
+                    //bat '''
+                      //  chcp 65001
+                      //  cd mle-template
+                      //  docker-compose up -d
+                      //  '''
                     bat '''
                         chcp 65001
-                        cd mle-template
                         docker-compose up -d
-                        '''
+                        '''    
                         }
 				    }
                 }
@@ -60,7 +67,7 @@ options {
 
         stage('Checkout container logs') {
             steps {
-                dir("mle-template") {
+                //dir("mle-template") {
                         bat '''
                             docker-compose up -d
                             for /f %%i in ('docker ps -qf "name=^mle-template-web-1"') do set containerId=%%i
@@ -72,17 +79,17 @@ options {
                                 docker logs --tail 1000 -f %containerId%
                                 )
                         '''
-                    }
+                  //  }
             }
         }
 
         stage('Checkout coverage report'){
             steps{
-                dir("mle-template"){
+                //dir("mle-template"){
                     bat '''
                     docker-compose logs -t --tail 10
                     '''
-                }
+                //}
             }
         }
 
