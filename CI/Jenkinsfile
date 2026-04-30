@@ -1,4 +1,4 @@
-clonepipeline {
+pipeline {
     agent any
 
     environment {
