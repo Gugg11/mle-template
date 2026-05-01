@@ -88,13 +88,13 @@ options {
                     bat '''
                     docker-compose logs -t --tail 10
                     '''
-                //}
+                //}`
             }
         }
 
         stage('Push'){
             steps{
-                bat 'chcp 65001 && docker push gugg11/mle-template:latest'
+                bat 'chcp 65001 && docker push gug1/mle-template:latest'
             }
         }
 	}
