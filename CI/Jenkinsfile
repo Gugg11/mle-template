@@ -94,7 +94,7 @@ options {
 
         stage('Push'){
             steps{
-                bat 'chcp 65001 && docker push Gugg11/mle-template:latest'
+                bat 'chcp 65001 && docker push gugg11/mle-template:latest'
             }
         }
 	}
