@@ -15,7 +15,7 @@ def get_headers():
     }
 
 
-def wait_for_vault(retries=10, delay=2):
+def wait_for_vault(retries=30, delay=2):
     for _ in range(retries):
         try:
             response = requests.get(
