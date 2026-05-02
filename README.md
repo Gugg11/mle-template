@@ -39,7 +39,6 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 - [Репозиторий GitHub](https://github.com/Gugg11/mle-template)
 - [DockerHub Image](https://hub.docker.com/r/gug1/mle-template)
 
----
 
 ##  Модель
 
@@ -49,7 +48,6 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 Результаты:
 - Accuracy: 0.975 (на тестовой выборке)
 
----
 
 ## Структура проекта
 
@@ -88,7 +86,7 @@ mle-template/
 ### Запуск:
 ```bash
 python src/app.py
-````
+
 
 ### Доступные методы:
 
@@ -225,5 +223,3 @@ python src/predict.py -m LOG_REG -t func
 ##  Вывод
 
 В рамках проекта реализован полный цикл разработки ML модели.
-
-````
