@@ -51,7 +51,7 @@ options {
                                 echo POSTGRES_HOST=db >> .env
                                 echo POSTGRES_PORT=5432 >> .env
                                 echo VAULT_TOKEN=%VAULT_TOKEN% >> .env
-                                docker-compose build
+                                docker build -t gug1/mle-template:latest .
                             '''
                         } finally {
                             bat '''
