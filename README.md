@@ -15,6 +15,7 @@
 - реализован CI/CD pipeline в Jenkins
 - реализован API сервис для взаимодействия с моделью
 - добавлена интеграция с PostgreSQL для сохранения результатов
+- внедрение хранилища секретов (HashiCorp Vault)
 ```
 ---
 ```
@@ -52,6 +53,12 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 ```
 ---
 
+## Архитектура решения
+
+```text
+Client → Flask API → PostgreSQL (через Vault)
+```
+---
 ## Структура проекта
 
 ```text
@@ -64,6 +71,7 @@ mle-template/
 │   ├── train.py
 │   ├── predict.py
 │   ├── db.py
+│   ├── vault_client.py
 │   └── app.py
 |     
 ├── data/
@@ -84,16 +92,43 @@ mle-template/
 └── README.md
 ```
 ---
+## Vault
+Используется HashiCorp Vault в dev-режиме.
 
+Секреты хранятся по пути:
+secret/postgres
+
+Пример содержимого:
+```text
+POSTGRES_DB
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_HOST
+POSTGRES_PORT
+```
+---
 ## PostgreSQL
 
 В проекте реализована интеграция с базой данных PostgreSQL для хранения результатов работы модели.
-
 При вызове API `/predict`:
 - выполняется предсказание
 - результат сохраняется в таблицу `predictions`
-Доступ к базе данных осуществляется через переменные окружения (`.env`), что обеспечивает безопасность и соответствует требованиям задания.
+Доступ к базе данных осуществляется через Vault, при этом учетные данные передаются через переменные окружения и Jenkins Credentials.
 
+Структура:
+
+```sql
+id SERIAL PRIMARY KEY,
+area FLOAT,
+perimeter FLOAT,
+compactness FLOAT,
+kernel_length FLOAT,
+kernel_width FLOAT,
+asymmetry_coeff FLOAT,
+kernel_groove FLOAT,
+prediction INTEGER,
+created_at TIMESTAMP
+```
 ---
 
 ## API сервис
@@ -155,6 +190,12 @@ POST /predict
 }
 ```
 
+```json
+{
+  "prediction": [2],
+  "saved_to_db": true
+}
+```
 ---
 
 ## Docker
@@ -180,7 +221,7 @@ http://localhost:8000
 
 ### CI:
 
-* clone репозитория
+* клонирование репозитория
 * сборка Docker image
 * запуск контейнера
 * обучение модели
@@ -192,6 +233,7 @@ http://localhost:8000
 
 * запуск контейнера с моделью
 * развёртывание API сервиса
+* проверка работоспособности
 
 ---
 
@@ -239,4 +281,4 @@ python src/predict.py -m LOG_REG -t func
 
 ##  Вывод
 
-В рамках проекта реализован полный цикл разработки ML модели, включая интеграцию с PostgreSQL для хранения результатов предсказаний.
+В рамках проекта реализован полный цикл разработки ML модели, включая интеграцию с PostgreSQL для хранения результатов предсказаний. Также в рамках лабораторной работы реализовано безопасное взаимодействие между сервисом модели и базой данных с использованием Vault и Jenkins Credentials. Все чувствительные данные вынесены из исходного кода, что соответствует современным требованиям DevOps и информационной безопасности.

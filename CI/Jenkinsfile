@@ -30,11 +30,17 @@ options {
 
         stage('Create and run docker container') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'postgres-creds',
-                    usernameVariable: 'POSTGRES_USER',
-                    passwordVariable: 'POSTGRES_PASSWORD'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'postgres-creds',
+                        usernameVariable: 'POSTGRES_USER',
+                        passwordVariable: 'POSTGRES_PASSWORD'
+                    ),
+                    string(
+                        credentialsId: 'vault-token',
+                        variable: 'VAULT_TOKEN'
+                    )
+                ]) {
                     script {
                         try {
                             bat '''
@@ -44,19 +50,18 @@ options {
                                 echo POSTGRES_PASSWORD=%POSTGRES_PASSWORD% >> .env
                                 echo POSTGRES_HOST=db >> .env
                                 echo POSTGRES_PORT=5432 >> .env
-                                type .env
-                                docker-compose build
+                                echo VAULT_TOKEN=%VAULT_TOKEN% >> .env
+                                docker build -t gug1/mle-template:latest .
                             '''
                         } finally {
                             bat '''
                                 chcp 65001
-                                type .env
                                 docker-compose up -d
                             '''
                             }
                         }
                     }
-                }   
+                }
             }
 
         stage('Login'){
