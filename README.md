@@ -14,9 +14,9 @@
 - создан Docker образ
 - реализован CI/CD pipeline в Jenkins
 - реализован API сервис для взаимодействия с моделью
-
+```
 ---
-
+```
 ## Датасет
 
 Использован датасет: Вариант 19
@@ -31,15 +31,16 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
  4   Kernel.Width     
  5   Asymmetry.Coeff  
  6   Kernel.Groove  
-
+```
 ---
-
+```
 ## Ссылки
 
 - [Репозиторий GitHub](https://github.com/Gugg11/mle-template)
 - [DockerHub Image](https://hub.docker.com/r/gug1/mle-template)
-
-
+```
+---
+```
 ##  Модель
 
 Использована модель:
@@ -47,7 +48,8 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 
 Результаты:
 - Accuracy: 0.975 (на тестовой выборке)
-
+```
+---
 
 ## Структура проекта
 
@@ -78,7 +80,7 @@ mle-template/
 ├── config.ini
 └── README.md
 ```
-
+---
 ## API сервис
 
 Реализован на Flask.
@@ -86,7 +88,7 @@ mle-template/
 ### Запуск:
 ```bash
 python src/app.py
-
+```
 
 ### Доступные методы:
 
