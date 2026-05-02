@@ -28,23 +28,35 @@ options {
 				}
 			}
 
-        stage('Create env file') {
+        stage('Create and run docker container') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'postgres-creds',
                     usernameVariable: 'POSTGRES_USER',
                     passwordVariable: 'POSTGRES_PASSWORD'
                 )]) {
-                    bat '''
-                        chcp 65001
-                        echo POSTGRES_DB=mle_db > .env
-                        echo POSTGRES_USER=%POSTGRES_USER% >> .env
-                        echo POSTGRES_PASSWORD=%POSTGRES_PASSWORD% >> .env
-                        echo POSTGRES_HOST=db >> .env
-                        echo POSTGRES_PORT=5432 >> .env
-                    '''
+                    script {
+                        try {
+                            bat '''
+                                chcp 65001
+                                echo POSTGRES_DB=mle_db > .env
+                                echo POSTGRES_USER=%POSTGRES_USER% >> .env
+                                echo POSTGRES_PASSWORD=%POSTGRES_PASSWORD% >> .env
+                                echo POSTGRES_HOST=db >> .env
+                                echo POSTGRES_PORT=5432 >> .env
+                                type .env
+                                docker-compose build
+                            '''
+                        } finally {
+                            bat '''
+                                chcp 65001
+                                type .env
+                                docker-compose up -d
+                            '''
+                            }
+                        }
                     }
-                }
+                }   
             }
 
         stage('Login'){
