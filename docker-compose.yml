@@ -1,11 +1,21 @@
 services:
+  vault:
+    image: hashicorp/vault:latest
+    container_name: mle-vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "vault-root-token"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK
+    command: server -dev
+
   db:
     image: postgres:15
     container_name: mle-postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -16,8 +26,10 @@ services:
     image: gug1/mle-template:latest
     depends_on:
       - db
-    env_file:
-      - .env
+      - vault
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN}
     command: bash -c "python src/preprocess.py && python src/train.py && python src/predict.py -m LOG_REG -t func && coverage run src/unit_tests/test_preprocess.py && coverage run -a src/unit_tests/test_training.py && coverage report -m"
     ports:
       - "8000:8000"
