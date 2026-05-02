@@ -128,6 +128,7 @@ asymmetry_coeff FLOAT,
 kernel_groove FLOAT,
 prediction INTEGER,
 created_at TIMESTAMP
+```
 ---
 
 ## API сервис
