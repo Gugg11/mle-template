@@ -18,19 +18,19 @@ class DataMaker():
         self.config = configparser.ConfigParser()
         self.log = logger.get_logger(__name__)
         self.project_path = os.path.join(os.getcwd(), "data")
-        self.data_path = os.path.join(self.project_path, "Iris.csv")
-        self.X_path = os.path.join(self.project_path, "Iris_X.csv")
-        self.y_path = os.path.join(self.project_path, "Iris_y.csv")
-        self.train_path = [os.path.join(self.project_path, "Train_Iris_X.csv"), os.path.join(
-            self.project_path, "Train_Iris_y.csv")]
-        self.test_path = [os.path.join(self.project_path, "Test_Iris_X.csv"), os.path.join(
-            self.project_path, "Test_Iris_y.csv")]
+        self.data_path = os.path.join(self.project_path, "seeds.csv")
+        self.X_path = os.path.join(self.project_path, "Seeds_X.csv")
+        self.y_path = os.path.join(self.project_path, "Seeds_y.csv")
+        self.train_path = [os.path.join(self.project_path, "Train_Seeds_X.csv"), os.path.join(
+            self.project_path, "Train_Seeds_y.csv")]
+        self.test_path = [os.path.join(self.project_path, "Test_Seeds_X.csv"), os.path.join(
+            self.project_path, "Test_Seeds_y.csv")]
         self.log.info("DataMaker is ready")
 
     def get_data(self) -> bool:
         dataset = pd.read_csv(self.data_path)
-        X = pd.DataFrame(dataset.iloc[:, 1:5].values)
-        y = pd.DataFrame(dataset.iloc[:, 5:].values)
+        X = dataset.drop(columns=["Type"])
+        y = dataset[["Type"]]
         X.to_csv(self.X_path, index=True)
         y.to_csv(self.y_path, index=True)
         if os.path.isfile(self.X_path) and os.path.isfile(self.y_path):
@@ -51,7 +51,7 @@ class DataMaker():
             self.log.error(traceback.format_exc())
             sys.exit(1)
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=0)
+            X, y, test_size=test_size, random_state=0, stratify=y)
         self.save_splitted_data(X_train, self.train_path[0])
         self.save_splitted_data(y_train, self.train_path[1])
         self.save_splitted_data(X_test, self.test_path[0])
