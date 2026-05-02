@@ -68,29 +68,6 @@ options {
                 }
             }
 
-        stage('Create and run docker container') {
-            steps {
-                script {
-                    try {
-                        //bat 'chcp 65001 && cd mle-template && docker-compose build'
-                        bat 'chcp 65001 && docker-compose build'
-                        }
-
-                    finally {
-                    //bat '''
-                      //  chcp 65001
-                      //  cd mle-template
-                      //  docker-compose up -d
-                      //  '''
-                    bat '''
-                        chcp 65001
-                        docker-compose up -d
-                        '''    
-                        }
-				    }
-                }
-            }
-
         // use for multi containers:
         //docker exec %containerId% cd app && coverage run src/unit_tests/test_preprocess.py && coverage run -a src/unit_tests/test_training.py && coverage report -m
         //use for single container (with auth):
