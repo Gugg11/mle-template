@@ -28,35 +28,43 @@ options {
 				}
 			}
 
+        stage('Create and run docker container') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'postgres-creds',
+                    usernameVariable: 'POSTGRES_USER',
+                    passwordVariable: 'POSTGRES_PASSWORD'
+                )]) {
+                    script {
+                        try {
+                            bat '''
+                                chcp 65001
+                                echo POSTGRES_DB=mle_db > .env
+                                echo POSTGRES_USER=%POSTGRES_USER% >> .env
+                                echo POSTGRES_PASSWORD=%POSTGRES_PASSWORD% >> .env
+                                echo POSTGRES_HOST=db >> .env
+                                echo POSTGRES_PORT=5432 >> .env
+                                type .env
+                                docker-compose build
+                            '''
+                        } finally {
+                            bat '''
+                                chcp 65001
+                                type .env
+                                docker-compose up -d
+                            '''
+                            }
+                        }
+                    }
+                }   
+            }
+
         stage('Login'){
             steps{
                 //withCredentials([usernamePassword(credentialsId: 'mle-template', passwordVariable: 'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]){
                 //bat 'chcp 65001 && echo %DOCKER_REGISTRY_PWD% | docker login -u %DOCKER_REGISTRY_USER% --password-stdin'}
                 //bat 'chcp 65001 && echo %DOCKERHUB_CREDS_PSW% | docker login -u %DOCKERHUB_CREDS_USR% --password-stdin'
                 bat 'chcp 65001 && docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
-                }
-            }
-
-        stage('Create and run docker container') {
-            steps {
-                script {
-                    try {
-                        //bat 'chcp 65001 && cd mle-template && docker-compose build'
-                        bat 'chcp 65001 && docker-compose build'
-                        }
-
-                    finally {
-                    //bat '''
-                      //  chcp 65001
-                      //  cd mle-template
-                      //  docker-compose up -d
-                      //  '''
-                    bat '''
-                        chcp 65001
-                        docker-compose up -d
-                        '''    
-                        }
-				    }
                 }
             }
 
