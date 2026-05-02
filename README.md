@@ -53,8 +53,7 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 
 ## Структура проекта
 
-```
-
+```text
 mle-template/
 ├── src/
 │   ├── unit_tests/
@@ -69,15 +68,18 @@ mle-template/
 ├── experiments/
 │   └── log_reg.sav
 ├── tests/
+│   ├── test_0.json
+│   └── test_1.json
+├── CI/
+│   └── Jenkinsfile
+├── CD/
+│   └── Jenkinsfile
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
 ├── config.ini
-└── Jenkinsfile
-
-````
-
----
+└── README.md
+```
 
 ## API сервис
 
@@ -210,7 +212,7 @@ gug1/mle-template:latest
 
 ---
 
-## 🚀 Запуск проекта
+## Запуск проекта
 
 ```bash
 python src/preprocess.py
@@ -222,9 +224,6 @@ python src/predict.py -m LOG_REG -t func
 
 ##  Вывод
 
-В рамках проекта реализован полный цикл разработки ML модели:
-
-* от подготовки данных до деплоя
-* с использованием современных DevOps практик (CI/CD, Docker, DVC)
+В рамках проекта реализован полный цикл разработки ML модели.
 
 ````
