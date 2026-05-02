@@ -3,6 +3,8 @@ import pickle
 import pandas as pd
 from flask import Flask, request, jsonify
 
+from db import init_db, save_prediction
+
 app = Flask(__name__)
 
 MODEL_PATH = os.path.join("experiments", "log_reg.sav")
@@ -36,10 +38,17 @@ def predict():
 
     prediction = model.predict(X)
 
+    save_prediction(
+        features=X.iloc[0],
+        prediction=prediction[0]
+    )
+
     return jsonify({
-        "prediction": prediction.tolist()
+        "prediction": prediction.tolist(),
+        "saved_to_db": True
     })
 
 
 if __name__ == "__main__":
+    init_db()
     app.run(host="0.0.0.0", port=8000)
