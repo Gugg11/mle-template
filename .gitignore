@@ -132,3 +132,9 @@ dmypy.json
 /data/*
 !/data/*.dvc
 !/data/seeds.csv
+
+# Files for experiments
+experiments/exp_test_*
+
+# ENV files
+.env
