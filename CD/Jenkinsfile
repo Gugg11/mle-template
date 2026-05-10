@@ -16,9 +16,6 @@ options {
 
         stage('Login'){
             steps{
-                //withCredentials([usernamePassword(credentialsId: 'mle-template', passwordVariable: 'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]){
-                //bat 'chcp 65001 && echo %DOCKER_REGISTRY_PWD% | docker login -u %DOCKER_REGISTRY_USER% --password-stdin'}
-                //bat 'chcp 65001 && echo %DOCKERHUB_CREDS_PSW% | docker login -u %DOCKERHUB_CREDS_USR% --password-stdin'
                 bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
                 }
             }
@@ -31,20 +28,45 @@ options {
             }
         }
 
-        stage('Run container'){
-            steps{
-                bat '''
-                        docker run --name mle-template -p 80:5556 -d Gugg11/mle-template:latest
-                '''
+       stage('Deploy with DB') {
+            steps {
+                // Останавливаем старые контейнеры, если остались
+                bat 'docker-compose down || exit 0'
+                // Генерируем .env с безопасными переменными (пароль из креденшелов)
+                withCredentials([usernamePassword(
+                    credentialsId: 'postgres-creds',
+                    usernameVariable: 'POSTGRES_USER',
+                    passwordVariable: 'POSTGRES_PASSWORD'
+                )]) {
+                    bat '''
+                        echo POSTGRES_DB=mle_db > .env
+                        echo POSTGRES_USER=%POSTGRES_USER% >> .env
+                        echo POSTGRES_PASSWORD=%POSTGRES_PASSWORD% >> .env
+                        echo POSTGRES_HOST=db >> .env
+                        echo POSTGRES_PORT=5432 >> .env
+                    '''
+                }
+                // Собираем и запускаем оба сервиса
+                bat 'docker-compose build --no-cache'
+                bat 'docker-compose up -d'
+                // Ждём, пока БД станет доступна и API запустится
+                bat 'timeout /t 25 /nobreak'
             }
         }
-	}
+
+        stage('Functional test') {
+            steps {
+                // Используем Python-скрипт 
+                bat 'docker exec mle-template python functional_test.py'
+            }
+        }
+    }
 
     post {
         always {
-            node('windows') {
-                bat 'docker stop mle-template && docker logout'
-            }
+            bat 'docker-compose down'
+            bat 'docker logout'
+            echo 'CD pipeline finished'
         }
     }
 }
