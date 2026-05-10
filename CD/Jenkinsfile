@@ -12,7 +12,14 @@ options {
         timestamps()
         skipDefaultCheckout(true)
 	}
+    
     stages {
+         stages {
+        stage('Checkout') {
+            steps {
+                checkout scm   // чтобы в workspace появились docker-compose.yml и functional_test.py
+            }
+        }    
 
         stage('Login'){
             steps{
@@ -23,7 +30,7 @@ options {
         stage('Pull image'){
             steps{
                 bat '''
-                        docker pull Gugg11/mle-template:latest
+                        docker pull gug1/mle-template:latest
                 '''
             }
         }
