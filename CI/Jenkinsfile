@@ -101,9 +101,7 @@ options {
 
      post {
         always {
-            bat 'docker-compose down'
             echo 'Pipeline finished'
-            bat 'docker logout'
         }
     }
 }
