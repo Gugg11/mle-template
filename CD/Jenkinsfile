@@ -54,6 +54,7 @@ options {
                 }
                 // запускаем оба сервиса, без сборки
                 bat 'docker-compose up -d'
+                bat 'powershell -Command "Start-Sleep -Seconds 25"'
             }
         }
 
