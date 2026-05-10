@@ -53,6 +53,7 @@ options {
                         echo POSTGRES_PASSWORD=%POSTGRES_PASSWORD% >> .env
                         echo POSTGRES_HOST=db >> .env
                         echo POSTGRES_PORT=5432 >> .env
+                        echo VAULT_TOKEN=%VAULT_TOKEN% >> .env
                     '''
                 }
                 // запускаем оба сервиса, без сборки
