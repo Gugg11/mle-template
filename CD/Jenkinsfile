@@ -30,6 +30,7 @@ pipeline {
 
         stage('Run container') {
             steps {
+                bat 'for /f "tokens=*" %%i in (\'docker ps -q --filter "publish=8000"\') do docker rm -f %%i || exit 0'
                 bat 'docker run --name mle-template -p 8000:8000 -d gug1/mle-template:latest'
             }
         }
