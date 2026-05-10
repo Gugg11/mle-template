@@ -2,43 +2,35 @@ import os
 import time
 import requests
 
+def _get_vault_addr():
+    return os.environ.get("VAULT_ADDR", "http://vault:8200")
 
-VAULT_ADDR = os.environ["VAULT_ADDR"]
-VAULT_TOKEN = os.environ["VAULT_TOKEN"]
-
-SECRET_PATH = "v1/secret/data/postgres"
-
+def _get_vault_token():
+    return os.environ.get("VAULT_TOKEN", "")
 
 def get_headers():
-    return {
-        "X-Vault-Token": VAULT_TOKEN
-    }
-
+    return {"X-Vault-Token": _get_vault_token()}
 
 def wait_for_vault(retries=30, delay=2):
+    addr = _get_vault_addr()
+    if not addr or not _get_vault_token():
+        print("Vault not configured, skipping health check")
+        return
     for _ in range(retries):
         try:
-            response = requests.get(
-                f"{VAULT_ADDR}/v1/sys/health",
-                timeout=3
-            )
-
-            if response.status_code in [200, 429, 472, 473, 501, 503]:
-                return True
-
+            resp = requests.get(f"{addr}/v1/sys/health", timeout=3)
+            if resp.status_code in [200, 429, 472, 473, 501, 503]:
+                return
         except requests.exceptions.RequestException:
             time.sleep(delay)
-
     raise ConnectionError("Vault is not available")
 
-
 def write_postgres_secret():
-    """
-    Записывает параметры подключения в Vault.
-    Берём ТОЛЬКО из env (Jenkins Credentials / .env)
-    """
+    addr = _get_vault_addr()
+    token = _get_vault_token()
+    if not addr or not token:
+        raise RuntimeError("Vault not configured")
     wait_for_vault()
-
     payload = {
         "data": {
             "POSTGRES_DB": os.environ["POSTGRES_DB"],
@@ -48,29 +40,25 @@ def write_postgres_secret():
             "POSTGRES_PORT": os.environ["POSTGRES_PORT"]
         }
     }
-
-    response = requests.post(
-        f"{VAULT_ADDR}/{SECRET_PATH}",
-        headers=get_headers(),
-        json=payload,
-        timeout=5
-    )
-
-    response.raise_for_status()
-
+    resp = requests.post(f"{addr}/v1/secret/data/postgres",
+                         headers=get_headers(), json=payload, timeout=5)
+    resp.raise_for_status()
 
 def get_postgres_secret():
-    """
-    Получает параметры подключения из Vault
-    """
+    addr = _get_vault_addr()
+    token = _get_vault_token()
+    # Если Vault не настроен, возвращаем переменные окружения напрямую
+    if not addr or not token:
+        print("Vault not configured, using environment variables")
+        return {
+            "POSTGRES_DB": os.environ.get("POSTGRES_DB", ""),
+            "POSTGRES_USER": os.environ.get("POSTGRES_USER", ""),
+            "POSTGRES_PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+            "POSTGRES_HOST": os.environ.get("POSTGRES_HOST", ""),
+            "POSTGRES_PORT": os.environ.get("POSTGRES_PORT", "")
+        }
     wait_for_vault()
-
-    response = requests.get(
-        f"{VAULT_ADDR}/{SECRET_PATH}",
-        headers=get_headers(),
-        timeout=5
-    )
-
-    response.raise_for_status()
-
-    return response.json()["data"]["data"]
+    resp = requests.get(f"{addr}/v1/secret/data/postgres",
+                        headers=get_headers(), timeout=5)
+    resp.raise_for_status()
+    return resp.json()["data"]["data"]
