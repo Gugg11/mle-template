@@ -21,63 +21,87 @@ options {
 				}
 			}
 
-        stage('Setup Python & install dependencies') {
+        stage('Checkout repo dir') {
             steps {
-                bat 'chcp 65001 && python -m venv venv && venv\\Scripts\\activate && pip install -r requirements.txt'
-                }
-            }
-        
-        stage('Data preprocessing') {
-            steps {
-                bat 'chcp 65001 && venv\\Scripts\\activate && python src/preprocess.py'
-                }
-            }
+               // bat 'chcp 65001 && cd mle-template && dir'
+                bat 'chcp 65001 && dir'
+				}
+			}
 
-        stage('Train model') {
-            steps {
-                bat 'chcp 65001 && venv\\Scripts\\activate && python src/train.py'
-                }
-            }    
-        
-        stage('Unit tests & coverage') {
-            steps {
-                bat '''
-                    chcp 65001
-                    venv\\Scripts\\activate
-                    coverage run src/unit_tests/test_preprocess.py
-                    coverage run -a src/unit_tests/test_training.py
-                    coverage report -m
-                '''
-                }
-            }
-        
-        stage('Functional test of model') {
-            when {
-                // Можно пропустить, если не нужен, но для надёжности оставим
-                expression { return fileExists('src/predict.py') }
-            }
-            steps {
-                bat 'chcp 65001 && venv\\Scripts\\activate && python src/predict.py -m LOG_REG -t func'
-                }
-            }
-
-        stage('Login to Docker Hub') {
-            steps {
+        stage('Login'){
+            steps{
+                //withCredentials([usernamePassword(credentialsId: 'mle-template', passwordVariable: 'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]){
+                //bat 'chcp 65001 && echo %DOCKER_REGISTRY_PWD% | docker login -u %DOCKER_REGISTRY_USER% --password-stdin'}
+                //bat 'chcp 65001 && echo %DOCKERHUB_CREDS_PSW% | docker login -u %DOCKERHUB_CREDS_USR% --password-stdin'
                 bat 'chcp 65001 && docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
                 }
-            }   
+            }
 
-        stage('Push Docker image') {
+        stage('Create and run docker container') {
             steps {
-                bat 'chcp 65001 && docker push gug1/mle-template:latest'
+                script {
+                    try {
+                        //bat 'chcp 65001 && cd mle-template && docker-compose build'
+                        bat 'chcp 65001 && docker-compose build'
+                        }
+
+                    finally {
+                    //bat '''
+                      //  chcp 65001
+                      //  cd mle-template
+                      //  docker-compose up -d
+                      //  '''
+                    bat '''
+                        chcp 65001
+                        docker-compose up -d
+                        '''    
+                        }
+				    }
                 }
             }
-        }     
+
+        // use for multi containers:
+        //docker exec %containerId% cd app && coverage run src/unit_tests/test_preprocess.py && coverage run -a src/unit_tests/test_training.py && coverage report -m
+        //use for single container (with auth):
+        //docker run --name mle-template_web_1 cd app && coverage run src/unit_tests/test_preprocess.py && coverage run -a src/unit_tests/test_training.py && coverage report -m
+
+        stage('Checkout container logs') {
+            steps {
+                //dir("mle-template") {
+                        bat '''
+                            docker-compose up -d
+                            for /f %%i in ('docker ps -qf "name=mle-template-ci-web-1"') do set containerId=%%i
+                            echo %containerId%
+                            IF "%containerId%" == "" (
+                                echo "No container running"
+                            ) ELSE (
+                                docker logs --tail 1000 -f %containerId%
+                            )
+                        '''
+                  //  }
+            }
+        }
+
+        stage('Checkout coverage report'){
+            steps{
+                //dir("mle-template"){
+                    bat '''
+                    docker-compose logs -t --tail 10
+                    '''
+                //}`
+            }
+        }
+
+        stage('Push'){
+            steps{
+                bat 'chcp 65001 && docker push gug1/mle-template:latest'
+            }
+        }
+	}
 
      post {
         always {
             echo 'Pipeline finished'
-            bat 'docker logout'
         }
     }
 }
