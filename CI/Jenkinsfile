@@ -58,7 +58,9 @@ pipeline {
                     bat 'docker-compose down --remove-orphans || exit 0'
                     bat 'docker rm -f mle-template mle-postgres || exit 0'
                     bat 'docker-compose up -d'
-                    bat 'powershell -Command "Start-Sleep -Seconds 25"'
+                    bat 'powershell -Command "Start-Sleep -Seconds 10"'   // ждём старта
+                    bat 'docker logs mle-vault'                         // диагностика Vault
+                    bat 'powershell -Command "Start-Sleep -Seconds 15"' 
                 }
             }
         }
