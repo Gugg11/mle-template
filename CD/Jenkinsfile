@@ -54,8 +54,6 @@ options {
                 }
                 // запускаем оба сервиса, без сборки
                 bat 'docker-compose up -d'
-            
-                bat 'timeout /t 25 /nobreak'
             }
         }
 
