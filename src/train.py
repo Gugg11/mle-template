@@ -3,13 +3,8 @@ import os
 import pandas as pd
 import pickle
 from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
 import sys
 import traceback
 
