@@ -12,14 +12,12 @@ options {
         timestamps()
         skipDefaultCheckout(true)
 	}
-    
     stages {
-         stages {
         stage('Checkout') {
             steps {
-                checkout scm   // чтобы в workspace появились docker-compose.yml и functional_test.py
+                checkout scm   // чтобы появились docker-compose.yml и functional_test.py
             }
-        }    
+        }
 
         stage('Login'){
             steps{
