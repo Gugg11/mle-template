@@ -17,6 +17,23 @@ services:
       timeout: 3s
       retries: 10
 
+  vault-init:
+    image: gug1/mle-template:latest
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    entrypoint: python -c "from app.vault_client import write_postgres_secret; write_postgres_secret()"
+    networks:
+      - ml-net    
+
   db:
     image: postgres:15
     container_name: mle-postgres
