@@ -10,7 +10,6 @@
 - выполнена подготовка данных
 - обучена ML модель (Logistic Regression)
 - реализованы тесты
-- настроена система управления данными (DVC)
 - создан Docker образ
 - реализован CI/CD pipeline в Jenkins
 - реализован API сервис для взаимодействия с моделью
@@ -55,6 +54,9 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 
 ```text
 mle-template/
+├── app/
+│   ├── __init__.py
+│   └── main.py
 ├── src/
 │   ├── unit_tests/
 │   │   ├── test_preprocess.py
@@ -83,60 +85,39 @@ mle-template/
 ---
 ## API сервис
 
-Реализован на Flask.
+Реализован на **FastAPI** с автоматической документацией Swagger.
 
 ### Запуск:
 ```bash
-python src/app.py
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+После запуска документация доступна по адресу:  
+[http://localhost:8000/docs](http://localhost:8000/docs)
 
 ### Доступные методы:
 
-#### Проверка работы
+#### `GET /` – проверка работы
+Ответ: `{"message":"ML model API is running"}`
 
-```bash
-GET / 
-```
+#### `GET /health` – здоровье сервиса
+Ответ: `{"status":"ok"}`
 
-Ответ:
+#### `GET /model` – информация о модели
+Ответ: `{"model":"LOG_REG","dataset":"Seeds","status":"ready","scaler_loaded":true}`
 
-```json
-{
-  "message": "ML model API is running"
-}
-```
-
----
-
-#### Информация о модели
-
-```bash
-GET /model
-```
-
----
-
-#### Предсказание
-
-```bash
-POST /predict
-```
-
-Пример запроса:
-
+#### `POST /predict` – предсказание
+Тело запроса (ровно 7 признаков, список списков):
 ```json
 {
   "X": [
-        {
-            "Area": 15.26,
-            "Perimeter": 14.84,
-            "Compactness": 0.8710,
-            "Kernel.Length": 5.763,
-            "Kernel.Width": 3.312,
-            "Asymmetry.Coeff": 2.221,
-            "Kernel.Groove": 5.220
-        }
+    [14.88, 14.57, 0.881, 5.554, 3.333, 1.018, 4.956]
   ]
+}
+```
+Успешный ответ (класс предсказания в массиве):
+```json
+{
+  "prediction": [2]
 }
 ```
 
@@ -165,18 +146,22 @@ http://localhost:8000
 
 ### CI:
 
-* clone репозитория
-* сборка Docker image
-* запуск контейнера
-* обучение модели
-* запуск тестов
-* подсчёт coverage
-* push в DockerHub
+- клонирование репозитория
+- установка зависимостей
+- предобработка данных (`src/preprocess.py`)
+- обучение модели (`src/train.py`)
+- юнит-тесты + coverage
+- функциональное тестирование модели (`src/predict.py -m LOG_REG -t func`)
+- сборка Docker-образа (`docker-compose build`)
+- логин и пуш образа в DockerHub
 
 ### CD:
 
-* запуск контейнера с моделью
-* развёртывание API сервиса
+- получение образа из DockerHub
+- удаление старого контейнера
+- запуск контейнера с пробросом порта 8000
+- функциональное тестирование API (POST /predict и проверка ответа)
+- остановка и удаление контейнера
 
 ---
 
@@ -206,18 +191,26 @@ gug1/mle-template:latest
 
 ---
 
-##  DVC
-
-Используется для управления данными и артефактами модели.
-
----
-
 ## Запуск проекта
 
+1. Подготовка данных:
 ```bash
 python src/preprocess.py
 python src/train.py
 python src/predict.py -m LOG_REG -t func
+```
+2. Обучение модели:
+```bash
+python src/train.py
+```
+3. Тестирование модели:
+```bash
+python src/predict.py -m LOG_REG -t smoke
+python src/predict.py -m LOG_REG -t func  
+```
+4. апуск API:
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 
 ```
 
 ---

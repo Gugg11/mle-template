@@ -33,7 +33,7 @@ class Predictor():
                                  default="LOG_REG",
                                  const="LOG_REG",
                                  nargs="?",
-                                 choices=["LOG_REG", "RAND_FOREST", "KNN", "GNB", "SVM", "D_TREE"])
+                                 choices=["LOG_REG"])
         self.parser.add_argument("-t",
                                  "--tests",
                                  type=str,

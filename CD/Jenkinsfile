@@ -38,6 +38,10 @@ pipeline {
             steps {
                 bat '''
                     timeout /t 10
+                    curl -s -o response.json -w "%%{http_code}" -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d "{\\"X\\":[[14.88,14.57,0.881,5.554,3.333,1.018,4.956]]}"
+                    echo Response body:
+                    type response.json
+                    echo Container logs:
                     docker logs --tail 100 mle-template
                 '''
             }
