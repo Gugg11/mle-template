@@ -1,7 +1,6 @@
 import configparser
 import os
 import unittest
-import pandas as pd
 import sys
 
 sys.path.insert(1, os.path.join(os.getcwd(), "src"))
