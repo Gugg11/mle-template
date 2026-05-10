@@ -1,6 +1,7 @@
 from pathlib import Path
 import pickle
 import pandas as pd
+import time
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
@@ -37,12 +38,17 @@ class InputData(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Инициализация БД при старте
-    try:
-        init_db()
-        print("Database initialized (table 'predictions' ready)")
-    except Exception as e:
-        print(f"Database init failed: {e}")
+    # Пытаемся инициализировать БД несколько раз
+    for attempt in range(1, 11):
+        try:
+            init_db()
+            print(f"Database initialized (table 'predictions' ready) on attempt {attempt}")
+            break
+        except Exception as e:
+            print(f"Attempt {attempt}: Database init failed: {e}")
+            time.sleep(2)
+    else:
+        print("Could not init DB after 10 attempts")
     yield
 
 app = FastAPI(
