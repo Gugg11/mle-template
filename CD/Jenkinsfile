@@ -3,9 +3,6 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDS=credentials('mle-template')
-        LC_ALL = "en_US.UTF-8"
-        LANG    = "en_US.UTF-8"
-        LANGUAGE = "en_US.UTF-8"
     }
 
 options {
@@ -13,12 +10,14 @@ options {
         skipDefaultCheckout(true)
 	}
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm   // чтобы появились docker-compose.yml и functional_test.py
+            }
+        }
 
         stage('Login'){
             steps{
-                //withCredentials([usernamePassword(credentialsId: 'mle-template', passwordVariable: 'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]){
-                //bat 'chcp 65001 && echo %DOCKER_REGISTRY_PWD% | docker login -u %DOCKER_REGISTRY_USER% --password-stdin'}
-                //bat 'chcp 65001 && echo %DOCKERHUB_CREDS_PSW% | docker login -u %DOCKERHUB_CREDS_USR% --password-stdin'
                 bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
                 }
             }
@@ -26,25 +25,55 @@ options {
         stage('Pull image'){
             steps{
                 bat '''
-                        docker pull Gugg11/mle-template:latest
+                        docker pull gug1/mle-template:latest
                 '''
             }
         }
 
-        stage('Run container'){
-            steps{
-                bat '''
-                        docker run --name mle-template -p 80:5556 -d Gugg11/mle-template:latest
-                '''
+       stage('Deploy with DB') {
+            steps {
+                // Останавливаем старые контейнеры, если остались
+                bat 'powershell -Command "docker ps -q --filter publish=8000 | ForEach-Object { docker rm -f \\$_ }"'
+                bat 'docker rm -f mle-template mle-postgres || exit 0'
+                bat 'docker-compose down || exit 0'
+                // Генерируем .env с безопасными переменными (пароль из креденшелов)
+                withCredentials([usernamePassword(
+                    credentialsId: 'postgres-creds',
+                    usernameVariable: 'POSTGRES_USER',
+                    passwordVariable: 'POSTGRES_PASSWORD'
+                ),
+                string(
+                    credentialsId: 'vault-token',
+                    variable: 'VAULT_TOKEN'
+                )
+                ]) {
+                    bat '''
+                        echo POSTGRES_DB=mle_db > .env
+                        echo POSTGRES_USER=%POSTGRES_USER% >> .env
+                        echo POSTGRES_PASSWORD=%POSTGRES_PASSWORD% >> .env
+                        echo POSTGRES_HOST=db >> .env
+                        echo POSTGRES_PORT=5432 >> .env
+                    '''
+                }
+                // запускаем оба сервиса, без сборки
+                bat 'docker-compose up -d'
+                bat 'powershell -Command "Start-Sleep -Seconds 30"'
             }
         }
-	}
+
+        stage('Functional test') {
+            steps {
+                // Используем Python-скрипт 
+                bat 'docker exec mle-template python functional_test.py'
+            }
+        }
+    }
 
     post {
         always {
-            node('windows') {
-                bat 'docker stop mle-template && docker logout'
-            }
+            bat 'docker-compose down'
+            bat 'docker logout'
+            echo 'CD pipeline finished'
         }
     }
 }
