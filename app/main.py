@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 from app.db import save_prediction, init_db
-from contextlib import asynccontextmanager
+
 
 
 # Путь к папке, в которой лежит этот файл (app/)
@@ -36,20 +36,6 @@ except Exception as e:
 class InputData(BaseModel):
     X: List[List[float]] = Field()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Пытаемся инициализировать БД несколько раз
-    for attempt in range(1, 11):
-        try:
-            init_db()
-            print(f"Database initialized (table 'predictions' ready) on attempt {attempt}")
-            break
-        except Exception as e:
-            print(f"Attempt {attempt}: Database init failed: {e}")
-            time.sleep(2)
-    else:
-        print("Could not init DB after 10 attempts")
-    yield
 
 app = FastAPI(
     title="Seeds Classification API",
@@ -57,6 +43,20 @@ app = FastAPI(
     version="2.0.0"
 )
 
+@app.on_event("startup")
+async def startup_db_init():
+    # Пытаемся инициализировать БД несколько раз
+    max_retries = 10
+    for attempt in range(1, max_retries + 1):
+        try:
+            init_db()
+            print(f"Database initialized on attempt {attempt}")
+            break
+        except Exception as e:
+            print(f"Attempt {attempt}: DB init failed: {e}")
+            time.sleep(2)
+    else:
+        print("Could not init DB after retries")
 
 @app.get("/")
 async def home():
