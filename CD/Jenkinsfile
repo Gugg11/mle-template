@@ -33,9 +33,7 @@ options {
        stage('Deploy with DB') {
             steps {
                 // Останавливаем старые контейнеры, если остались
-                bat '''
-                    for /f "tokens=*" %%i in ('docker ps -q --filter "publish=8000"') do docker rm -f %%i
-                '''
+                bat 'powershell -Command "docker ps -q --filter publish=8000 | ForEach-Object { docker rm -f \\$_ }"'
                 bat 'docker rm -f mle-template mle-postgres || exit 0'
                 bat 'docker-compose down || exit 0'
                 // Генерируем .env с безопасными переменными (пароль из креденшелов)
