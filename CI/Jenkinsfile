@@ -69,13 +69,13 @@ options {
             steps {
                 //dir("mle-template") {
                         bat '''
-                            docker-compose up -d
-                            for /f %%i in ('docker ps -qf "name=mle-template-ci-web-1"') do set containerId=%%i
-                            echo %containerId%
-                            IF "%containerId%" == "" (
+                            timeout /t 120 /nobreak
+                            for /f "tokens=*" %%i in ('docker ps -q --filter "ancestor=gug1/mle-template:latest"') do set containerId=%%i
+                            echo Container ID: %containerId%
+                            if "%containerId%"=="" (
                                 echo "No container running"
-                            ) ELSE (
-                                docker logs --tail 1000 -f %containerId%
+                            ) else (
+                                docker logs %containerId%
                             )
                         '''
                   //  }
@@ -86,7 +86,7 @@ options {
             steps{
                 //dir("mle-template"){
                     bat '''
-                    docker-compose logs -t --tail 10
+                    docker-compose logs -t --tail 50
                     '''
                 //}`
             }
