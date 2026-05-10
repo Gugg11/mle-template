@@ -69,7 +69,7 @@ options {
             steps {
                 //dir("mle-template") {
                         bat '''
-                            timeout /t 120 /nobreak
+                            timeout /t 15 /nobreak
                             for /f "tokens=*" %%i in ('docker ps -q --filter "ancestor=gug1/mle-template:latest"') do set containerId=%%i
                             echo Container ID: %containerId%
                             if "%containerId%"=="" (
