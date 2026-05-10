@@ -3,9 +3,6 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDS=credentials('mle-template')
-        LC_ALL = "en_US.UTF-8"
-        LANG    = "en_US.UTF-8"
-        LANGUAGE = "en_US.UTF-8"
     }
 
 options {
@@ -36,6 +33,7 @@ options {
        stage('Deploy with DB') {
             steps {
                 // Останавливаем старые контейнеры, если остались
+                bat 'docker rm -f mle-template mle-postgres || exit 0'
                 bat 'docker-compose down || exit 0'
                 // Генерируем .env с безопасными переменными (пароль из креденшелов)
                 withCredentials([usernamePassword(
@@ -51,10 +49,9 @@ options {
                         echo POSTGRES_PORT=5432 >> .env
                     '''
                 }
-                // Собираем и запускаем оба сервиса
-                bat 'docker-compose build --no-cache'
+                // запускаем оба сервиса, без сборки
                 bat 'docker-compose up -d'
-                // Ждём, пока БД станет доступна и API запустится
+            
                 bat 'timeout /t 25 /nobreak'
             }
         }
