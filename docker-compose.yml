@@ -54,6 +54,7 @@ services:
   web:
     build: .
     image: gug1/mle-template:latest
+    container_name: mle-template
     depends_on:
       db:
         condition: service_healthy
