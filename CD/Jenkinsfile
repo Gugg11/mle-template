@@ -26,7 +26,7 @@ pipeline {
 
             stage('Pull image') {
                 steps {
-                    bat 'docker pull gug1/mle-template:latest'
+                    bat 'docker pull gug1/mle-template:lab1'
                 }
             }
 
@@ -36,7 +36,7 @@ pipeline {
                     bat 'powershell -Command "docker ps -q --filter publish=8000 | ForEach-Object { docker rm -f \\$_ }"'
                     bat 'docker rm -f mle-template || exit 0'
                     // Запуск контейнера
-                    bat 'docker run --name mle-template -p 8000:8000 -d gug1/mle-template:latest'
+                    bat 'docker run --name mle-template -p 8000:8000 -d gug1/mle-template:lab1'
                     // Ждём 15 секунд, чтобы сервер точно стартовал
                     bat 'powershell -Command "Start-Sleep -Seconds 15"'
                     // Выводим логи контейнера для диагностики (можно оставить)
