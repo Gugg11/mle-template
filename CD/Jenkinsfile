@@ -30,15 +30,18 @@ pipeline {
 
         stage('Run container') {
             steps {
-                bat 'for /f "tokens=*" %%i in (\'docker ps -q --filter "publish=8000"\') do docker rm -f %%i || exit 0'
-                bat 'docker run --name mle-template -p 8000:8000 -d gug1/mle-template:latest'
+                bat '''
+                    docker ps -q --filter "publish=8000" > containers.txt
+                    for /F %%i in (containers.txt) do docker rm -f %%i
+                    docker run --name mle-template -p 8000:8000 -d gug1/mle-template:latest
+                    '''
             }
         }
 
         stage('Functional test') {
             steps {
                 bat '''
-                    timeout /t 30
+                    timeout /t 30 /nobreak
                     docker exec mle-template python tests/functional/functional_test.py
                 '''
             }
