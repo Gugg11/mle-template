@@ -38,7 +38,7 @@ pipeline {
         stage('Functional test') {
             steps {
                 bat '''
-                    timeout /t 10
+                    timeout /t 30
                     docker exec mle-template python tests/functional/functional_test.py
                 '''
             }
@@ -47,10 +47,8 @@ pipeline {
 
     post {
         always {
-            bat '''
-                docker rm -f mle-template || exit 0
-                docker logout
-            '''
+            bat 'docker rm -f mle-template || exit 0'
+            bat 'docker logout'
             echo 'CD pipeline finished'
         }
     }
