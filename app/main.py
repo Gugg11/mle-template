@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from typing import List
 from app.db import save_prediction, init_db
 from app.vault_client import wait_for_vault
-
+from kafka_producer import send_prediction_message
 
 
 # Путь к папке, в которой лежит этот файл (app/)
