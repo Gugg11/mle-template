@@ -94,7 +94,7 @@ options {
 
         stage('Push'){
             steps{
-                bat 'docker tag mle-template gug1/mle-template:lab1'
+                bat 'docker tag gug1/mle-template:latest gug1/mle-template:lab1'
                 bat 'docker push gug1/mle-template:lab1'
             }
         }
