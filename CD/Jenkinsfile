@@ -33,8 +33,8 @@ pipeline {
             stage('Run container') {
                 steps {
                     // Очистка порта через PowerShell (без проблем с кавычками)
-                    bat 'powershell -Command "docker ps -q --filter publish=8000 | ForEach-Object { docker rm -f \\$_ }"'
                     bat 'docker rm -f mle-template || exit 0'
+                    bat 'for /f "tokens=*" %%i in (\'docker ps -q --filter "publish=8000"\') do docker rm -f %%i'
                     // Запуск контейнера
                     bat 'docker run --name mle-template -p 8000:8000 -d gug1/mle-template:lab1'
                     // Ждём 15 секунд, чтобы сервер точно стартовал
