@@ -7,41 +7,49 @@ pipeline {
 
     options {
         timestamps()
+        skipDefaultCheckout(true)
     }
-
+    
     stages {
-        stage('Login') {
+        stage('Checkout') {
             steps {
-                bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
+                checkout scm   // чтобы появились docker-compose.yml и functional_test.py
             }
         }
 
-        stage('Pull image') {
-            steps {
-                bat 'docker pull gug1/mle-template:latest'
+    
+            stage('Login') {
+                steps {
+                    bat 'docker login -u %DOCKERHUB_CREDS_USR% -p %DOCKERHUB_CREDS_PSW%'
+                }
             }
-        }
 
-        stage('Run container') {
-            steps {
-                // Очистка порта через PowerShell (без проблем с кавычками)
-                bat 'powershell -Command "docker ps -q --filter publish=8000 | ForEach-Object { docker rm -f \\$_ }"'
-                bat 'docker rm -f mle-template || exit 0'
-                // Запуск контейнера
-                bat 'docker run --name mle-template -p 8000:8000 -d gug1/mle-template:latest'
-                // Ждём 15 секунд, чтобы сервер точно стартовал
-                bat 'powershell -Command "Start-Sleep -Seconds 15"'
-                // Выводим логи контейнера для диагностики (можно оставить)
-                bat 'docker logs mle-template'
+            stage('Pull image') {
+                steps {
+                    bat 'docker pull gug1/mle-template:latest'
+                }
             }
-        }
 
-        stage('Functional test') {
-            steps {
-                bat 'python functional_test.py'
+            stage('Run container') {
+                steps {
+                    // Очистка порта через PowerShell (без проблем с кавычками)
+                    bat 'powershell -Command "docker ps -q --filter publish=8000 | ForEach-Object { docker rm -f \\$_ }"'
+                    bat 'docker rm -f mle-template || exit 0'
+                    // Запуск контейнера
+                    bat 'docker run --name mle-template -p 8000:8000 -d gug1/mle-template:latest'
+                    // Ждём 15 секунд, чтобы сервер точно стартовал
+                    bat 'powershell -Command "Start-Sleep -Seconds 15"'
+                    // Выводим логи контейнера для диагностики (можно оставить)
+                    bat 'docker logs mle-template'
+                }
+            }
+
+            stage('Functional test') {
+                steps {
+                    bat 'docker exec mle-template python functional_test.py'
+                }
             }
         }
-    }
 
     post {
         always {
