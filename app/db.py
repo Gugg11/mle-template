@@ -4,11 +4,11 @@ from app.vault_client import get_postgres_secret
 def get_connection():
     secrets = get_postgres_secret()
     return psycopg2.connect(
-        dbname=secrets("POSTGRES_DB"),
-        user=secrets("POSTGRES_USER"),
-        password=secrets("POSTGRES_PASSWORD"),
-        host=secrets("POSTGRES_HOST"),
-        port=secrets("POSTGRES_PORT"),
+        dbname=secrets["POSTGRES_DB"],
+        user=secrets["POSTGRES_USER"],
+        password=secrets["POSTGRES_PASSWORD"],
+        host=secrets["POSTGRES_HOST"],
+        port=secrets["POSTGRES_PORT"],
     )
 
 
