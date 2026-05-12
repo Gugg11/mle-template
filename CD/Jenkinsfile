@@ -25,7 +25,7 @@ options {
         stage('Pull image'){
             steps{
                 bat '''
-                        docker pull gug1/mle-template:latest
+                        docker pull gug1/mle-template:lab4
                 '''
             }
         }
