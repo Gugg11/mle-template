@@ -95,9 +95,12 @@ async def predict(data: InputData):
     X = scaler.transform(X)
     prediction = model.predict(X)
     # Сохраняем все образцы
-    for i, sample in enumerate(data.X):
+    for sample, pred in zip(data.X, prediction):
         try:
-            save_prediction(sample, int(prediction[i]))
+            save_prediction(sample, int(pred))
+            # Отправляем результат в Kafka
+            send_prediction_message(sample, int(pred))
         except Exception as e:
-            print(f"DB save error: {e}")
-    return {"prediction": prediction.tolist()}
+            print(f"Error saving/sending: {e}")
+
+    return {"prediction": prediction}
