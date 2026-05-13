@@ -72,7 +72,6 @@ docker-compose включает два сервиса:
 - `db` (postgres:15) — база данных
 - `web` (FastAPI) — модель и API
 
-Сервисы связаны сетью `ml-network`, web ждёт здоровье db.
 ```
 ---
 ## Безопасность
@@ -84,7 +83,7 @@ docker-compose включает два сервиса:
 ## Структура проекта
 
 ```text
-hw2/
+mle-template/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py
