@@ -180,7 +180,7 @@ coverage report
 
 Покрытие:
 
-* ~76%
+* ~92%
 
 ---
 
@@ -189,7 +189,7 @@ coverage report
 Образ доступен:
 
 ```
-gug1/mle-template:latest
+docker build -t gug1/mle-template:lab1 .
 ```
 
 ---
