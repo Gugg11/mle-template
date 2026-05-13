@@ -7,8 +7,8 @@
 Проект реализует цикл разработки модели машинного обучения с использованием CI/CD подхода.
 
 В рамках работы:
-- выполнена подготовка данных
-- обучена ML модель (Logistic Regression)
+- выполнена подготовка данных (Seeds dataset, вариант 19)
+- обучена ML модель (Logistic Regression (точность 0.975))
 - реализованы тесты
 - создан Docker образ
 - реализован CI/CD pipeline в Jenkins
@@ -44,6 +44,8 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 
 Использована модель:
 - **Logistic Regression**
+- **StandardScaler для предобработки**
+- **Точность на тестовой выборке: 0.975**
 
 Результаты:
 - Accuracy: 0.975 (на тестовой выборке)
@@ -78,6 +80,7 @@ mle-template/
 │   └── Jenkinsfile
 ├── Dockerfile
 ├── docker-compose.yml
+├── functional_test.py
 ├── requirements.txt
 ├── config.ini
 └── README.md
@@ -208,7 +211,7 @@ python src/train.py
 python src/predict.py -m LOG_REG -t smoke
 python src/predict.py -m LOG_REG -t func  
 ```
-4. апуск API:
+4. Запуск API:
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000 
 ```
