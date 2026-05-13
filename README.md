@@ -35,8 +35,8 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 ```
 ## Ссылки
 
-- [Репозиторий GitHub](https://github.com/Gugg11/mle-template)
-- [DockerHub Image](https://hub.docker.com/r/gug1/mle-template)
+- [Репозиторий GitHub](https://github.com/Gugg11/mle-template/tree/lab1-ci-cd)
+- [DockerHub Image](https://hub.docker.com/r/gug1/mle-template) (тег lab1)
 ```
 ---
 ```
