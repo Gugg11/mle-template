@@ -103,4 +103,4 @@ async def predict(data: InputData):
         except Exception as e:
             print(f"Error saving/sending: {e}")
 
-    return {"prediction": prediction}
+    return {"prediction": prediction.tolist()}
