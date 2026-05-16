@@ -1,7 +1,9 @@
 from pathlib import Path
 import pickle
 import pandas as pd
-import time
+import asyncio
+from psycopg2 import OperationalError
+from kafka.errors import KafkaError
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
@@ -22,14 +24,14 @@ SCALER_PATH = PROJECT_ROOT / "experiments" / "scaler.sav"
 try:
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
-except Exception as e:
+except (FileNotFoundError, pickle.UnpicklingError) as e:
     model = None
     print(f"Failed to load model: {e}")
 
 try:
     with open(SCALER_PATH, "rb") as f:
         scaler = pickle.load(f)
-except Exception as e:
+except (FileNotFoundError, pickle.UnpicklingError) as e:
     scaler = None
     print(f"Scaler not loaded: {e}")
 
@@ -55,11 +57,11 @@ async def startup_db_init():
             init_db()
             print(f"Database initialized on attempt {attempt}")
             break
-        except Exception as e:
+        except OperationalError as e:
             print(f"Attempt {attempt}: DB init failed: {e}")
-            time.sleep(2)
+            await asyncio.sleep(2)
     else:
-        print("Could not init DB after retries")
+        raise RuntimeError("Could not init DB after retries")
 
 @app.get("/")
 async def home():
@@ -100,7 +102,10 @@ async def predict(data: InputData):
             save_prediction(sample, int(pred))
             # Отправляем результат в Kafka
             send_prediction_message(sample, int(pred))
-        except Exception as e:
-            print(f"Error saving/sending: {e}")
+        except (OperationalError, KafkaError) as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error saving/sending: {e}"
+            )
 
     return {"prediction": prediction.tolist()}
