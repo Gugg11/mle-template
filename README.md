@@ -62,7 +62,6 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 
 - `vault-init` — одноразовый контейнер, записывающий секреты в Vault при старте.
 - `vault_client.py` — модуль для взаимодействия с Vault (запись/чтение секретов).
-```
 ---
 
 ### Потоковая передача (Apache Kafka)
@@ -70,6 +69,7 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
 Отдельный сервис kafka-consumer непрерывно читает этот топик и выводит сообщения в лог.
 Producer встроен в веб-сервис (app/kafka_producer.py).
 Consumer запускается как самостоятельный контейнер (app/kafka_consumer.py).
+
 ---
 
 ### Схема данных
@@ -92,15 +92,13 @@ docker-compose включает шесть сервисов:
 - zookeeper (confluentinc/cp-zookeeper) — координатор для Kafka
 - kafka (confluentinc/cp-kafka) — брокер сообщений
 - kafka-consumer — сервис чтения сообщений из топика predictions
----
+
 ---
 ## Безопасность
 Все пароли и логины вынесены из кода и не хранятся в переменных окружения веб-сервиса.
 Секреты записываются в Vault на этапе инициализации, а веб-приложение получает их через HTTP API Vault.
 В репозитории лежит только `.env.example`.
 В Jenkins секреты берутся из Credentials и передаются в `.env` для `vault-init`. 
-
-
 
 ---
 ## Структура проекта
