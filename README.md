@@ -4,21 +4,15 @@
 
 ##  Описание проекта
 
-Проект реализует цикл разработки модели машинного обучения с использованием CI/CD подхода.
-
-В рамках работы:
-- выполнена подготовка данных
-- обучена ML модель (Logistic Regression)
-- реализованы тесты
-- настроена система управления данными (DVC)
-- создан Docker образ
-- реализован CI/CD pipeline в Jenkins
-- реализован API сервис для взаимодействия с моделью
-- добавлена интеграция с PostgreSQL для сохранения результатов
-- внедрение хранилища секретов (HashiCorp Vault)
+Проект расширяет ЛР2, добавляя сохранение результатов предсказаний в PostgreSQL.
+- Модель: Logistic Regression (точность 0.975)
+- API: FastAPI
+- База данных: PostgreSQL (контейнер)
+- Хранилище секретов: HashiCorp Vault
+- CI/CD: Jenkins
 ```
 ---
-```
+
 ## Датасет
 
 Использован датасет: Вариант 19
@@ -35,45 +29,88 @@ https://www.kaggle.com/datasets/jmcaro/wheat-seedsuci
  6   Kernel.Groove  
 ```
 ---
-```
+
 ## Ссылки
 
-- [Репозиторий GitHub](https://github.com/Gugg11/mle-template)
-- [DockerHub Image](https://hub.docker.com/r/gug1/mle-template)
+- [Репозиторий GitHub](https://github.com/Gugg11/mle-template/tree/lab3-vault)
+- [DockerHub Image](https://hub.docker.com/r/gug1/mle-template) (тег **lab3**)
 ```
 ---
-```
+
 ##  Модель
 
 Использована модель:
 - **Logistic Regression**
+- **StandardScaler для предобработки**
+- **Точность на тестовой выборке: 0.975**
 
 Результаты:
 - Accuracy: 0.975 (на тестовой выборке)
 ```
 ---
 
-## Архитектура решения
+### Конфигурация подключения
+- Тип БД: PostgreSQL
+- Подключение через переменные окружения / config.ini
+```
+---
+## Хранилище секретов (HashiCorp Vault)
 
-```text
-Client → Flask API → PostgreSQL (через Vault)
+Параметры подключения к PostgreSQL больше не передаются через `.env` напрямую.
+Они хранятся в Vault и запрашиваются приложением динамически с использованием токена.
+
+- `vault-init` — одноразовый контейнер, записывающий секреты в Vault при старте.
+- `vault_client.py` — модуль для взаимодействия с Vault (запись/чтение секретов).
+```
+---
+
+### Схема данных
+```sql
+-- Пример таблицы для результатов модели
+CREATE TABLE IF NOT EXISTS predictions (
+    id SERIAL PRIMARY KEY,
+    features FLOAT8[] NOT NULL,
+    prediction INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+---
+## Архитектура
+docker-compose включает четыре сервиса:
+- db (postgres:15) — база данных
+- web (FastAPI) — модель и API
+- vault (hashicorp/vault) — хранилище секретов
+- vault-init — инициализация секретов (одноразовый)
+---
+---
+## Безопасность
+Все пароли и логины вынесены из кода и не хранятся в переменных окружения веб-сервиса.
+Секреты записываются в Vault на этапе инициализации, а веб-приложение получает их через HTTP API Vault.
+В репозитории лежит только `.env.example`.
+В Jenkins секреты берутся из Credentials и передаются в `.env` для `vault-init`. 
+
+```
+---
+
+
 ```
 ---
 ## Структура проекта
 
 ```text
 mle-template/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├──  vault_client.py
+│   └── db.py
 ├── src/
 │   ├── unit_tests/
 │   │   ├── test_preprocess.py
 │   │   └── test_training.py
 │   ├── preprocess.py
 │   ├── train.py
-│   ├── predict.py
-│   ├── db.py
-│   ├── vault_client.py
-│   └── app.py
-|     
+│   └── predict.py
 ├── data/
 │   └── seeds.csv
 ├── experiments/
@@ -87,130 +124,65 @@ mle-template/
 │   └── Jenkinsfile
 ├── Dockerfile
 ├── docker-compose.yml
+├── functional_test.py
 ├── requirements.txt
 ├── config.ini
 └── README.md
 ```
 ---
-## Vault
-Используется HashiCorp Vault в dev-режиме.
-
-Секреты хранятся по пути:
-secret/postgres
-
-Пример содержимого:
-```text
-POSTGRES_DB
-POSTGRES_USER
-POSTGRES_PASSWORD
-POSTGRES_HOST
-POSTGRES_PORT
-```
----
-## PostgreSQL
-
-В проекте реализована интеграция с базой данных PostgreSQL для хранения результатов работы модели.
-При вызове API `/predict`:
-- выполняется предсказание
-- результат сохраняется в таблицу `predictions`
-Доступ к базе данных осуществляется через Vault, при этом учетные данные передаются через переменные окружения и Jenkins Credentials.
-
-Структура:
-
-```sql
-id SERIAL PRIMARY KEY,
-area FLOAT,
-perimeter FLOAT,
-compactness FLOAT,
-kernel_length FLOAT,
-kernel_width FLOAT,
-asymmetry_coeff FLOAT,
-kernel_groove FLOAT,
-prediction INTEGER,
-created_at TIMESTAMP
-```
----
-
 ## API сервис
 
-Реализован на Flask.
+Реализован на **FastAPI** с автоматической документацией Swagger.
 
 ### Запуск:
 ```bash
-python src/app.py
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+После запуска документация доступна по адресу:  
+[http://localhost:8000/docs](http://localhost:8000/docs)
 
 ### Доступные методы:
 
-#### Проверка работы
+#### `GET /` – проверка работы
+Ответ: `{"message":"ML model API is running"}`
 
-```bash
-GET / 
-```
+#### `GET /health` – здоровье сервиса
+Ответ: `{"status":"ok"}`
 
-Ответ:
+#### `GET /model` – информация о модели
+Ответ: `{"model":"LOG_REG","dataset":"Seeds","status":"ready","scaler_loaded":true}`
 
-```json
-{
-  "message": "ML model API is running"
-}
-```
-
----
-
-#### Информация о модели
-
-```bash
-GET /model
-```
-
----
-
-#### Предсказание
-
-```bash
-POST /predict
-```
-
-Пример запроса:
-
+#### `POST /predict` – предсказание
+Тело запроса (ровно 7 признаков, список списков):
 ```json
 {
   "X": [
-        {
-            "Area": 15.26,
-            "Perimeter": 14.84,
-            "Compactness": 0.8710,
-            "Kernel.Length": 5.763,
-            "Kernel.Width": 3.312,
-            "Asymmetry.Coeff": 2.221,
-            "Kernel.Groove": 5.220
-        }
+    [14.88, 14.57, 0.881, 5.554, 3.333, 1.018, 4.956]
   ]
 }
 ```
-
+Успешный ответ (класс предсказания в массиве):
 ```json
 {
-  "prediction": [2],
-  "saved_to_db": true
+  "prediction": [1]
 }
 ```
+
 ---
 
 ## Docker
 
-### Сборка и запуск:
+### Сборка и запуск
 
 ```bash
 docker-compose build
-docker-compose up
+docker-compose up -d
 ```
 
 После запуска API доступен:
 
 ```
-http://localhost:8000
+ http://localhost:8000/docs
 ```
 
 ---
@@ -221,19 +193,22 @@ http://localhost:8000
 
 ### CI:
 
-* клонирование репозитория
-* сборка Docker image
-* запуск контейнера
-* обучение модели
-* запуск тестов
-* подсчёт coverage
-* push в DockerHub
+- клонирование репозитория
+- генерация .env из креденшелов Jenkins (с VAULT_TOKEN)
+- сборка Docker-образа
+- запуск контейнеров (включая vault и vault-init)
+- юнит-тесты + coverage (внутри контейнера)
+- пуш образа с тегом lab3 в DockerHub
 
 ### CD:
 
-* запуск контейнера с моделью
-* развёртывание API сервиса
-* проверка работоспособности
+- получение образа из DockerHub gug1/mle-template:lab3
+- удаление старого контейнера
+- запуск контейнера docker-compose up -d
+- функциональный тест (functional_test.py) – проверяет ответ API и запись в БД
+- остановка и удаление контейнера
+- 
+Примечание: В логах CD может появляться DB check failed: 'POSTGRES_DB'. Это не ошибка, а подтверждение того, что веб-сервис не использует переменные окружения для БД (секреты получаются из Vault).
 
 ---
 
@@ -246,10 +221,10 @@ coverage run src/unit_tests/test_preprocess.py
 coverage run -a src/unit_tests/test_training.py
 coverage report
 ```
-
+Функциональный тест: functional_test.py выводит DB check: features=[...], prediction=1, подтверждая сохранение в БД
 Покрытие:
 
-* ~76%
+* ~92%
 
 ---
 
@@ -258,27 +233,30 @@ coverage report
 Образ доступен:
 
 ```
-gug1/mle-template:latest
+docker build -t gug1/mle-template:lab3 
 ```
 
 ---
 
-##  DVC
+## Запуск проекта локально
 
-Используется для управления данными и артефактами модели.
-
----
-
-## Запуск проекта
-
+1. Создайте файл .env в корне проекта:
 ```bash
-python src/preprocess.py
-python src/train.py
-python src/predict.py -m LOG_REG -t func
+POSTGRES_DB=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_HOST=
+POSTGRES_PORT=
+VAULT_TOKEN =
 ```
+2. Поднимите сервисы:
+```bash
+docker-compose up -d --build
+```
+3. Откройте http://localhost:8000/docs и выполните запрос к /predict:
 
 ---
 
 ##  Вывод
 
-В рамках проекта реализован полный цикл разработки ML модели, включая интеграцию с PostgreSQL для хранения результатов предсказаний. Также в рамках лабораторной работы реализовано безопасное взаимодействие между сервисом модели и базой данных с использованием Vault и Jenkins Credentials. Все чувствительные данные вынесены из исходного кода, что соответствует современным требованиям DevOps и информационной безопасности.
+В результате работы реализован ML-сервис с безопасным хранением секретов: модель предсказывает через API, результат сохраняется в PostgreSQL, а параметры подключения защищены с помощью HashiCorp Vault.
