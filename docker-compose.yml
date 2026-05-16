@@ -74,7 +74,7 @@ services:
 
 volumes:
   postgres_data:
-  vault_data:
+
 
 networks:
   ml-net:
